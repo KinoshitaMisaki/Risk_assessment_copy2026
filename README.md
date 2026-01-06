@@ -1,16 +1,117 @@
-# React + Vite
+# CREATE-SIMPLE Web - 化学物質リスクアセスメント支援ツール
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 1. 概要
 
-Currently, two official plugins are available:
+`CREATE-SIMPLE Web` は、化学物質を取り扱う作業におけるリスクアセスメント（吸入、経皮、危険性）を簡易的に実施するためのウェブアプリケーションです。専門的な知識がない方でも、画面の指示に従って情報を入力するだけで、リスクレベルの評価を行うことができます。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+このツールは、厚生労働省が提供するコントロール・バンディング手法ツール「CREATE-SIMPLE」を参考に、より直感的でアクセスしやすいUI/UXを提供することを目的としています。
 
-## React Compiler
+### 主な機能
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-   **個別リスク評価**: 単一の作業シナリオについて、詳細な条件を入力し、リアルタイムでリスクレベルを判定します。
+-   **物質データベース(DB)更新機能**: ユーザー自身が保有する化学物質リスト（CSV形式）をアップロードし、評価に使用するデータベースを更新・拡張できます。
+-   **一括判定機能**: 複数の評価対象（物質＋作業条件）を記載したCSVファイルをアップロードすることで、一度にすべてのリスク評価を行い、結果をダウンロードできます。
 
-## Expanding the ESLint configuration
+## 2. 技術スタック
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+-   **フロントエンド**: React (Hooks)
+-   **開発環境**: Vite
+-   **スタイリング**: Tailwind CSS
+-   **アイコン**: Lucide React
+-   **CSV処理**: PapaParse
+
+## 3. セットアップと実行方法
+
+### 前提条件
+
+-   [Node.js](https://nodejs.org/) (バージョン 18.x 以上を推奨)
+-   [npm](https://www.npmjs.com/) (Node.js に同梱)
+
+### インストール
+
+1.  **リポジトリのクローン**:
+    ```bash
+    git clone <repository-url>
+    cd <repository-directory>
+    ```
+
+2.  **依存関係のインストール**:
+    プロジェクトのルートディレクトリで以下のコマンドを実行し、必要なパッケージをすべてインストールします。
+    ```bash
+    npm install
+    ```
+
+### 開発サーバーの起動
+
+インストール完了後、以下のコマンドで開発サーバーを起動します。
+
+```bash
+npm run dev
+```
+
+サーバーが起動すると、ターミナルにローカルアドレス（通常は `http://localhost:5173/`）が表示されます。このアドレスにウェブブラウザでアクセスすると、アプリケーションが開きます。
+
+## 4. 操作マニュアル
+
+### 4.1. 物質データベース(DB)の更新
+
+アプリケーションの評価精度は、使用する化学物質のデータベースに依存します。初回起動時はサンプルデータが読み込まれていますが、より正確な評価のためには、ご自身の化学物質リストをアップロードすることを推奨します。
+
+1.  画面右上の「**物質DB更新**」ボタンをクリックします。
+2.  ファイル選択ダイアログが開くので、`SubstanceList.csv` 形式に準拠したCSVファイルを選択します。
+3.  アップロードが成功すると、画面右上に通知が表示され、データベースが新しいものに置き換わります。
+
+**CSVファイルの仕様 (`SubstanceList.csv`)**:
+
+-   文字コード: `UTF-8`
+-   必須カラム:
+    -   `No`: 一意のID（数値）
+    -   `CAS RN`: CAS登録番号
+    -   `日本語名称`: 物質の日本語名
+    -   `沸点`: 揮発性判定に使用（数値）
+    -   `8時間` または `許容濃度`: GHS分類に基づく許容濃度(OEL)として使用（数値, ppm）
+    -   その他、`引火性液体` などのGHS分類カラム
+
+### 4.2. 個別リスク評価
+
+単一の作業シナリオを評価する場合に使用します。
+
+1.  **STEP 1: 対象製品の基本情報**
+    -   評価のタイトル、実施場所、製品名などを入力します。
+    -   評価対象（吸入、経皮、危険性）と製品の性状（液体、粉体、気体）を選択します。
+
+2.  **STEP 2: 取扱い物質情報**
+    -   「物質選択」ドロップダウンから、評価したい化学物質を選択します。このリストはアップロードした物質DBに基づきます。
+    -   製品中の当該物質の含有率(wt%)を入力します。
+
+3.  **STEP 3: 作業内容に関する質問**
+    -   取扱量、スプレー作業の有無、換気状況、作業時間など、作業環境に関する質問に回答します。
+    -   選択肢を変更すると、右側の結果パネルがリアルタイムで更新されます。
+
+4.  **STEP 4: リスク判定結果**
+    -   画面右側のパネルに、吸入・経皮・危険性のそれぞれのリスクレベル（I〜IV または 低〜高）が色付きで表示されます。
+    -   推定ばく露濃度やリスク比(RCR)などの詳細な計算結果も確認できます。
+
+### 4.3. 一括判定 (CSV)
+
+複数のシナリオを一度に評価する場合に便利です。
+
+1.  画面上部の「**一括判定 (CSV)**」ボタンをクリックして、一括判定モードに切り替えます。
+2.  **CSVファイルの準備**:
+    以下のカラムを持つCSVファイル（`targets.csv`など）を準備します。1行が1つの評価シナリオに対応します。
+
+| CAS RN       | 物質名 | 含有率 | 取扱量 | スプレー作業 | 換気             | 作業時間 | ... |
+| :----------- | :----- | :----- | :----- | :----------- | :--------------- | :------- | :-- |
+| `108-88-3`   | トルエン | `100`  | `大量` | `いいえ`     | `全体換気`       | `通常`   | ... |
+| `67-64-1`    | アセトン | `50`   | `少量` | `はい`       | `局所排気(外付)` | `短時間` | ... |
+
+    -   **必須カラム**: `CAS RN` または `物質名` のいずれかで物質を特定します。
+    -   **作業条件カラム**: `取扱量`, `スプレー作業`, `換気` など。省略された場合は、標準的なデフォルト値が適用されます。
+
+3.  **アップロード**:
+    画面中央のエリアにCSVファイルをドラッグ＆ドロップするか、クリックしてファイルを選択します。
+
+4.  **結果の確認とダウンロード**:
+    -   アップロードが完了すると、ファイル内の各シナリオのリスク評価結果がテーブル形式で表示されます。
+    -   データベースに存在しない物質や、データの不備がある行はエラーとして表示されます。
+    -   「**結果をダウンロード**」ボタンをクリックすると、評価結果（リスクレベル、RCRなど）の列が追加された新しいCSVファイルをダウンロードできます。
