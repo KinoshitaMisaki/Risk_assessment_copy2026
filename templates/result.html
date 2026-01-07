@@ -10,17 +10,37 @@
                 <table class="min-w-full bg-white">
                     <thead class="bg-gray-800 text-white">
                         <tr>
-                            {% for column in columns %}
-                                <th class="py-2 px-4 text-left">{{ column }}</th>
-                            {% endfor %}
+                            <th class="py-2 px-4 text-left">CAS RN</th>
+                            <th class="py-2 px-4 text-left">物質名</th>
+                            <th class="py-2 px-4 text-left">使用したOEL</th>
+                            <th class="py-2 px-4 text-left">ばく露濃度(8h)</th>
+                            <th class="py-2 px-4 text-left">吸入リスク(8h)</th>
+                            <th class="py-2 px-4 text-left">コメント(8h)</th>
+                            <th class="py-2 px-4 text-left">ばく露濃度(短時間)</th>
+                            <th class="py-2 px-4 text-left">吸入リスク(短時間)</th>
+                            <th class="py-2 px-4 text-left">コメント(短時間)</th>
+                            <th class="py-2 px-4 text-left">経皮リスク</th>
+                            <th class="py-2 px-4 text-left">コメント(経皮)</th>
+                            <th class="py-2 px-4 text-left">物理リスク</th>
+                            <th class="py-2 px-4 text-left">コメント(物理)</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for row in data %}
                             <tr class="border-b">
-                                {% for column in columns %}
-                                    <td class="py-2 px-4">{{ row[column] }}</td>
-                                {% endfor %}
+                                <td class="py-2 px-4 whitespace-nowrap">{{ row['CAS_RN'] }}</td>
+                                <td class="py-2 px-4 whitespace-nowrap">{{ row['Name_JP'] }}</td>
+                                <td class="py-2 px-4 whitespace-nowrap">{{ row['OEL_Used_Value'] }}</td>
+                                <td class="py-2 px-4">{{ row['EpBand_8h'] }}</td>
+                                <td class="py-2 px-4">{{ row['Risk_Inhalation_8h'] }}</td>
+                                <td class="py-2 px-4 truncate max-w-xs" title="{{ row['Risk_Comment_8h'] }}">{{ row['Risk_Comment_8h'] }}</td>
+                                <td class="py-2 px-4">{{ row['EpBand_Short'] }}</td>
+                                <td class="py-2 px-4">{{ row['Risk_Inhalation_Short'] }}</td>
+                                <td class="py-2 px-4 truncate max-w-xs" title="{{ row['Risk_Comment_Short'] }}">{{ row['Risk_Comment_Short'] }}</td>
+                                <td class="py-2 px-4">{{ row['Risk_Dermal'] }}</td>
+                                <td class="py-2 px-4 truncate max-w-xs" title="{{ row['Risk_Comment_Dermal'] }}">{{ row['Risk_Comment_Dermal'] }}</td>
+                                <td class="py-2 px-4">{{ row['Risk_Physical'] }}</td>
+                                <td class="py-2 px-4 truncate max-w-xs" title="{{ row['Risk_Comment_Physical'] }}">{{ row['Risk_Comment_Physical'] }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
@@ -28,7 +48,7 @@
             </div>
         </div>
         <div class="text-center">
-            <a href="#" class="inline-block text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5">
+            <a href="{{ url_for('download_results') }}" class="inline-block text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5">
                 結果をダウンロード
             </a>
         </div>

@@ -1,3 +1,4 @@
 __pycache__/
-flask.log
+*.log
 uploads/
+downloads/
