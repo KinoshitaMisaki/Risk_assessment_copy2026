@@ -2,7 +2,7 @@ import os
 import pandas as pd
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, send_file
 from werkzeug.utils import secure_filename
-from logic import calculator, risk_assessment
+from logic import calculator, risk_assessment, input_mapping
 import uuid
 from flask import session
 import config
@@ -120,6 +120,16 @@ def index():
     """Renders the main upload page."""
     return render_template('index.html')
 
+def preprocess_user_csv(df):
+    """
+    Converts Japanese text selections in the user-uploaded CSV to their
+    corresponding numeric or boolean values based on the input_mapping.
+    """
+    for column, mapping in input_mapping.COLUMN_MAPPINGS.items():
+        if column in df.columns:
+            df[column] = df[column].map(mapping)
+    return df
+
 def process_data(df):
     """Processes the uploaded data to perform risk assessment."""
 
@@ -181,7 +191,10 @@ def process_csv():
 
         user_df = pd.read_csv(filepath)
 
-        results = process_data(user_df)
+        # Preprocess the dataframe to convert text to numbers
+        preprocessed_df = preprocess_user_csv(user_df)
+
+        results = process_data(preprocessed_df)
 
         results_id = str(uuid.uuid4())
         results_cache[results_id] = results
