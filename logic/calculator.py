@@ -215,15 +215,15 @@ def calculate_exposure_bands(row, volatility_rank):
 
     if frequency_is_weekly_or_more:
         # --- Logic for '週1回以上' (Weekly or more) ---
-        # Assumption: Since the number of working days per week is not provided,
-        # we assume a standard 5-day work week to estimate total weekly hours.
-        assumed_days_per_week = 5
-        weekly_hours = daily_hours * assumed_days_per_week
+        days_per_week = row.get('DaysPerWeek_Q6_Option', 0)
+        # Ensure days_per_week is a valid number
+        if pd.isna(days_per_week):
+            days_per_week = 0
+
+        weekly_hours = daily_hours * days_per_week
 
         # Spec condition: TimeCoeff = 10 if (weekly hours > 40) OR (daily hours > 8 AND days/week >= 3)
-        # We can only reliably check the first part. However, if daily_hours > 8, our assumed
-        # weekly_hours will be > 40 anyway, so the first condition effectively covers the check.
-        if weekly_hours > 40:
+        if weekly_hours > 40 or (daily_hours > 8 and days_per_week >= 3):
             time_coeff = 10
         # Spec condition: TimeCoeff = 0.1 if weekly hours <= 4
         elif weekly_hours <= 4:

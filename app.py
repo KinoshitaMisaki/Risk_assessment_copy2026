@@ -6,6 +6,7 @@ from logic import calculator, risk_assessment, input_mapping
 import uuid
 from flask import session
 import config
+from io import StringIO
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = config.UPLOAD_FOLDER
@@ -218,7 +219,6 @@ def download_results():
     if results_id and results_id in results_cache:
         df = pd.DataFrame(results_cache[results_id])
         # Create an in-memory CSV file
-        from io import StringIO
         csv_buffer = StringIO()
         df.to_csv(csv_buffer, index=False, encoding='utf-8-sig')
         csv_buffer.seek(0)

@@ -39,7 +39,7 @@
 ### ヘッダー (Headers)
 
 ```
-CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency_Q6,Variation_Q7,SkinArea_Q8,Glove_Q9,Education_Q10,Temp_Q11,AntiFire_Q12,AntiExplosion_Q13,AntiMetal_Q14,ContactWaterAir_Q15
+CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency_Q6,DaysPerWeek_Q6_Option,Variation_Q7,SkinArea_Q8,Glove_Q9,Education_Q10,Temp_Q11,AntiFire_Q12,AntiExplosion_Q13,AntiMetal_Q14,ContactWaterAir_Q15
 ```
 
 ### 入力例 (Example)
@@ -47,8 +47,8 @@ CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency
 以下は、ホルムアルデヒド (CAS RN: 50-00-0) の評価シナリオ例です。各選択肢は日本語のテキストで入力してください。
 
 ```csv
-CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency_Q6,Variation_Q7,SkinArea_Q8,Glove_Q9,Education_Q10,Temp_Q11,AntiFire_Q12,AntiExplosion_Q13,AntiMetal_Q14,ContactWaterAir_Q15
-50-00-0,10,極微量（10mL未満）,はい,はい,換気レベルD（外付け式局所排気装置）,30分超～1時間以下,週1回以上,ばく露濃度の変動が大きい作業,片手の手のひら付着,耐透過性・耐浸透性の手袋の着用している,十分な教育や訓練を行っている,室温,はい,はい,はい,はい
+CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency_Q6,DaysPerWeek_Q6_Option,Variation_Q7,SkinArea_Q8,Glove_Q9,Education_Q10,Temp_Q11,AntiFire_Q12,AntiExplosion_Q13,AntiMetal_Q14,ContactWaterAir_Q15
+50-00-0,10,極微量（10mL未満）,はい,はい,換気レベルD（外付け式局所排気装置）,8時間超,週1回以上,5,ばく露濃度の変動が大きい作業,片手の手のひら付着,耐透過性・耐浸透性の手袋の着用している,十分な教育や訓練を行っている,室温,はい,はい,はい,はい
 ```
 
 ### 各項目の選択肢 (Column Options)
@@ -61,6 +61,7 @@ CAS_RN,Concentration,Amount_Q1,Spray_Q2,Area_Q3,Ventilation_Q4,Time_Q5,Frequency
 -   **Ventilation_Q4:** `レベルA（特に換気のない部屋）`, `レベルB（全体換気）`, `レベルC（工業的な全体換気、屋外作業）`, `レベルD（外付け式局所排気装置）`, `レベルE（囲い式局所排気装置）`, `レベルF（密閉容器内での取扱い）`
 -   **Time_Q5:** `8時間超`, `7時間超～8時間以下`, `...`, `30分以下`
 -   **Frequency_Q6:** `週1回以上`, `週1回未満`
+-   **DaysPerWeek_Q6_Option:** 週あたりの作業日数（`Frequency_Q6`が「週1回以上」の場合に必須）。例: `3`, `5`
 -   **Variation_Q7:** `ばく露濃度の変動が大きい作業`, `変動が小さい`
 -   **SkinArea_Q8:** `大きなコインサイズ`, `片手の手のひら付着`, `...`, `両手の肘から下全体`
 -   **Glove_Q9:** `着用していない / 情報のない手袋`, `耐透過性・耐浸透性の手袋の着用している`
