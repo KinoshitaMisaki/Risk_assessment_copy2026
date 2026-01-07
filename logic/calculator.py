@@ -208,39 +208,35 @@ def calculate_exposure_bands(row, volatility_rank):
 
     apf_coeff = 1 # Fixed value
 
-    # Step 3: Time/Frequency Correction (TimeCoeff)
+    # Step 3: Time/Frequency Correction (TimeCoeff) - Corrected for v3.2
     time_coeff = 1.0
     daily_hours = row['Time_Q5']
     frequency_is_weekly_or_more = (row['Frequency_Q6'] == 1)
 
     if frequency_is_weekly_or_more:
         # --- Logic for '週1回以上' (Weekly or more) ---
-        days_per_week = row.get('DaysPerWeek_Q6_Option', 0)
-        # Ensure days_per_week is a valid number
+        days_per_week = row.get('Frequency_Days', 0)
         if pd.isna(days_per_week):
             days_per_week = 0
 
         weekly_hours = daily_hours * days_per_week
 
-        # Spec condition: TimeCoeff = 10 if (weekly hours > 40) OR (daily hours > 8 AND days/week >= 3)
         if weekly_hours > 40 or (daily_hours > 8 and days_per_week >= 3):
             time_coeff = 10
-        # Spec condition: TimeCoeff = 0.1 if weekly hours <= 4
         elif weekly_hours <= 4:
             time_coeff = 0.1
-        # Otherwise, TimeCoeff remains 1.0
+        else:
+            time_coeff = 1.0
     else:
         # --- Logic for '週1回未満' (Less than weekly) ---
-        # Assumption: Since total yearly hours are not provided, we make a
-        # conservative assumption that a 'less than weekly' task occurs roughly
-        # once a month (12 times a year) to estimate total annual hours.
-        assumed_events_per_year = 12
-        yearly_hours = daily_hours * assumed_events_per_year
+        annual_events = row.get('Frequency_Events', 0)
+        if pd.isna(annual_events):
+            annual_events = 0
 
-        # Spec condition: TimeCoeff = 1.0 if yearly hours > 192
+        yearly_hours = daily_hours * annual_events
+
         if yearly_hours > 192:
             time_coeff = 1.0
-        # Spec condition: TimeCoeff = 0.1 otherwise
         else:
             time_coeff = 0.1
 

@@ -87,3 +87,18 @@ TEMP_VAL = {
 }
 
 # Q12-Q15 (AntiFire, AntiExplosion, AntiMetal, ContactWaterAir) は True/False で保持
+
+# --- v3.2 Specification Additions ---
+
+# Mapping for the user-provided 'Product_Property' column
+PRODUCT_PROPERTY = {
+    '液体': 1,
+    '固体': 2
+}
+
+# Mapping for the substance database 'Property_Type' column (for error messages)
+SUBSTANCE_PROPERTY = {
+    1: '液体',
+    2: '固体',
+    3: '気体'
+}
