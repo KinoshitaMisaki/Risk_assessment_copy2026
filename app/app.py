@@ -20,21 +20,20 @@ df_glove = pd.DataFrame()
 
 # Mapping from Japanese CSV headers to internal English names
 GHS_JP_TO_EN_MAP = {
-    '爆発物': 'GHS_Explosives', '引火性ガス': 'GHS_FlamGas', 'エアゾール': 'GHS_Aerosol',
+    '爆発物': 'GHS_Explosives', '可燃性ガス': 'GHS_FlamGas', 'エアゾール': 'GHS_Aerosol',
     '酸化性ガス': 'GHS_OxGas', '高圧ガス': 'GHS_GasesUnderPressure', '引火性液体': 'GHS_FlamLiq',
     '可燃性固体': 'GHS_FlamSol', '自己反応性化学品': 'GHS_SelfReact', '自然発火性液体': 'GHS_PyrLiq',
     '自然発火性固体': 'GHS_PyrSol', '自己発熱性化学品': 'GHS_SelfHeat',
     '水反応可燃性化学品': 'GHS_WaterReact', '酸化性液体': 'GHS_OxLiq', '酸化性固体': 'GHS_OxSol',
-    '有機過酸化物': 'GHS_OrgPerox', '金属腐食性': 'GHS_MetCorr',
+    '有機過酸化物': 'GHS_OrgPerox', '金属腐食性化学品': 'GHS_MetCorr', # Corrected name
     '鈍性化爆発物': 'GHS_InertExplosives'
 }
 
-# Mapping for other required columns
 COLUMN_JP_TO_EN_MAP = {
-    '沸点': 'bp', '引火点': 'flash_point', '分子量': 'mw', 'LogKow': 'log_kow',
-    '蒸気圧(値)': 'vp_val', '蒸気圧(単位)': 'vp_unit',
-    '水溶解度(値)': 'water_sol_val', '水溶解度(単位)': 'water_sol_unit',
-    '性状': 'prop_type_raw'
+    '沸点': 'bp', '引火点': 'flash_point', '分子量': 'mw', '水／オクタノール分配係数（logKow）': 'log_kow',
+    '値': 'vp_val', '単位': 'vp_unit',
+    '値.1': 'water_sol_val', '単位.1': 'water_sol_unit',
+    '性状\n液体:1、固体:2、気体:3': 'prop_type_raw'
 }
 
 def allowed_file(filename):
@@ -45,9 +44,6 @@ def load_databases():
     try:
         substance_path = os.path.join(os.path.dirname(__file__), 'data', 'SubstanceList.csv')
         df_substance = pd.read_csv(substance_path, encoding='cp932', header=3, low_memory=False)
-
-        # Rename all columns at once for efficiency
-        df_substance.rename(columns={**GHS_JP_TO_EN_MAP, **COLUMN_JP_TO_EN_MAP}, inplace=True)
         df_substance.set_index('CAS RN', inplace=True)
 
         glove_path = os.path.join(os.path.dirname(__file__), 'data', 'GloveData.csv')
@@ -60,14 +56,18 @@ def load_databases():
 # --- Calculation Pipeline ---
 
 def preprocess_user_csv_text(df):
-    """Converts text-based user input into numeric/boolean values using mappings."""
     for col, mapping in input_mapping.ALL_MAPPINGS.items():
         if col in df.columns:
             df[col] = df[col].map(mapping)
     return df
 
+def rename_columns(df):
+    """Renames Japanese columns to English equivalents for processing."""
+    df.rename(columns={**GHS_JP_TO_EN_MAP, **COLUMN_JP_TO_EN_MAP}, inplace=True)
+    return df
+
 def run_pipeline(df):
-    """Orchestrates the calculation pipeline by calling logic modules."""
+    df = rename_columns(df)
     df = preprocess_user_csv_text(df)
     df = preprocess_and_normalize(df)
     df = calculator.determine_properties_vectorized(df)
@@ -85,8 +85,6 @@ def run_pipeline(df):
     return df
 
 def preprocess_and_normalize(df):
-    """Prepares the merged dataframe, normalizes units."""
-    # Convert user-provided columns to numeric types, coercing errors
     user_numeric_cols = [
         'amount_level', 'concentration', 'work_time_daily', 'freq_val',
         'skin_area', 'glove_type', 'glove_edu', 'process_temp'
@@ -94,14 +92,12 @@ def preprocess_and_normalize(df):
     for col in user_numeric_cols:
         df[col] = pd.to_numeric(df.get(col), errors='coerce')
 
-    # Unit Normalization using vectorized operations
     df['vp_val_pa'] = df['vp_val'] * df['vp_unit'].map(constants.VP_CONVERSION).fillna(1)
     df['water_sol_mg_cm3'] = df['water_sol_val'] * df['water_sol_unit'].map(constants.WATER_SOL_CONVERSION).fillna(0)
 
     return df
 
 def calculate_final_rcr_and_levels(df):
-    """Calculates final RCRs and risk levels for all assessment types."""
     oel_target = df['OEL_8h'].fillna(df['ACR_Max'])
     df['RCR_Inhalation'] = df['EpBandMax'] / oel_target
     df['Risk_Level_Inh'] = df['RCR_Inhalation'].apply(lambda x: calculator.get_risk_level(x, is_dermal=False))
@@ -140,7 +136,6 @@ def upload_file_route():
             result_filename = f"result_{filename}"
             result_path = os.path.join(app.config['DOWNLOAD_FOLDER'], result_filename)
             os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
-            # Use a more compatible Shift_JIS variant
             result_df.to_csv(result_path, index=False, encoding='shift_jisx0213')
 
             return redirect(url_for('download_file_route', name=result_filename))
