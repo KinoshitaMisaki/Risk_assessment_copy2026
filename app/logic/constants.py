@@ -20,13 +20,15 @@ VP_CONVERSION = {
 # 4.5.2 Initial Exposure Concentration (Initial_EP) Matrices
 # Liquids (ppm)
 INITIAL_EP_LIQUID = {
-    # Amount Level: 1:Large, 2:Medium, 3:Small, 4:Trace, 5:Very Trace
-    # Volatility Rank: 1:High, 2:Medium, 3:Low, 4:Very Low
+    # Amount Level (row) x Volatility Rank (col)
+    # Corrected based on VBA implementation review
+    # Rows: 1:大, 2:中, 3:小, 4:微, 5:極
+    # Cols: 1:高, 2:中, 3:低, 4:極低
     (1, 1): 5000, (1, 2): 500, (1, 3): 50, (1, 4): 5,
     (2, 1): 500,  (2, 2): 500, (2, 3): 50, (2, 4): 5,
     (3, 1): 50,   (3, 2): 50,  (3, 3): 5,  (3, 4): 0.5,
-    (4, 1): 5,    (4, 2): 5,   (4, 3): 5,  (4, 4): 0.5,
-    (5, 1): 0.5,  (5, 2): 5,   (5, 3): 0.5,(5, 4): 0.05,
+    (4, 1): 50,   (4, 2): 5,   (4, 3): 5,  (4, 4): 0.5, # Corrected (4,1) from 5 to 50
+    (5, 1): 5,    (5, 2): 5,   (5, 3): 0.5,(5, 4): 0.05, # Corrected (5,1) from 0.5 to 5
 }
 
 # Solids (mg/m^3)

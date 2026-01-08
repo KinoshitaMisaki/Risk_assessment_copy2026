@@ -41,43 +41,43 @@ def calculate_acr_max_vectorized(df):
 
     # HL5 Conditions
     cond_hl5 = (
-        check_inhalation(['区分1']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['区分1']) & ~inhalation_present) |
-        check_ghs('GHS_Carcinogenicity', ['区分1A', '区分1B']) |
-        check_ghs('GHS_GermCellMutagenicity', ['区分1A', '区分1B'])
+        check_inhalation(['1']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['1']) & ~inhalation_present) |
+        check_ghs('GHS_Carcinogenicity', ['1', '1A', '1B']) |
+        check_ghs('GHS_GermCellMutagenicity', ['1', '1A', '1B'])
     )
 
     # HL4 Conditions
     cond_hl4 = (
-        check_inhalation(['区分2']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['区分2']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1A']) |
-        check_ghs('GHS_RespiratorySensitizer', ['区分1', '区分1A', '区分1B']) |
-        check_ghs('GHS_Carcinogenicity', ['区分2']) |
-        check_ghs('GHS_GermCellMutagenicity', ['区分2']) |
-        check_ghs('GHS_ReproductiveToxicity', ['区分1A', '区分1B']) |
-        check_ghs('GHS_STOT_Repeated', ['区分1'])
+        check_inhalation(['2']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['2']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['1A']) |
+        check_ghs('GHS_RespiratorySensitizer', ['1', '1A', '1B']) |
+        check_ghs('GHS_Carcinogenicity', ['2', '2A', '2B']) |
+        check_ghs('GHS_GermCellMutagenicity', ['2', '2A', '2B']) |
+        check_ghs('GHS_ReproductiveToxicity', ['1', '1A', '1B']) |
+        check_ghs('GHS_STOT_Repeated', ['1'])
     )
 
     # HL3 Conditions
     cond_hl3 = (
-        check_inhalation(['区分3']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['区分3']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1B', '区分1C']) |
-        check_ghs('GHS_EyeDamage_Irritation', ['区分1']) |
-        check_ghs('GHS_SkinSensitizer', ['区分1', '区分1A', '区分1B']) |
-        check_ghs('GHS_ReproductiveToxicity', ['区分2']) |
-        check_ghs('GHS_STOT_Single', ['区分1']) |
-        check_ghs('GHS_STOT_Repeated', ['区分2'])
+        check_inhalation(['3']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['3']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['1', '1B', '1C']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['1']) |
+        check_ghs('GHS_SkinSensitizer', ['1', '1A', '1B']) |
+        check_ghs('GHS_ReproductiveToxicity', ['2']) |
+        check_ghs('GHS_STOT_Single', ['1']) |
+        check_ghs('GHS_STOT_Repeated', ['2'])
     )
 
     # HL2 Conditions
     cond_hl2 = (
-        check_inhalation(['区分4']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['区分4']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['区分2']) |
-        check_ghs('GHS_EyeDamage_Irritation', ['区分2A', '区分2B']) |
-        check_ghs('GHS_STOT_Single', ['区分2', '区分3'])
+        check_inhalation(['4']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['4']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['2']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['2']) |
+        check_ghs('GHS_STOT_Single', ['2', '3'])
     )
 
     acr_choices_liquid = [0.05, 0.5, 5, 50, 500]
@@ -112,9 +112,14 @@ def select_oel_vectorized(df):
         if col not in df.columns:
             df[col] = np.nan
 
-    df['OEL_8h'] = df[oel_8h_cols].bfill(axis=1).iloc[:, 0]
-    df['OEL_ST'] = df[oel_st_cols].bfill(axis=1).iloc[:, 0]
+    # Find the minimum available OEL for 8h and Short Term, replicating VBA logic
+    df['OEL_8h'] = df[oel_8h_cols].min(axis=1)
+    df['OEL_ST'] = df[oel_st_cols].min(axis=1)
 
+    # Fallback for OEL_ST, ensuring alignment with VBA logic
+    # First, try to fill with a direct calculation from an 8h value if one exists ('濃度基準値' is 'oelConcentrationStandard8Hour')
+    df['OEL_ST'].fillna(df['濃度基準値'] * 3, inplace=True)
+    # Then, use the calculated minimum 8h OEL
     df['OEL_ST'].fillna(df['OEL_8h'] * 3, inplace=True)
     df['OEL_ST'].fillna(df['ACR_Max'] * 3, inplace=True)
     return df
@@ -146,9 +151,21 @@ def calculate_inhalation_risk_vectorized(df):
     df['initial_ep'].fillna(0, inplace=True)
 
     base_exp = df['initial_ep'] * df['conc_coeff'] * df['spray_coeff'] * df['area_coeff'] * df['venti_coeff']
-    df['EpBandMax'] = base_exp * df['time_coeff']
-    df['EpBandMax_ST'] = base_exp * df['var_coeff']
-    df.loc[(df['volatility_rank'] == 4) & (~df['spray_work']), 'EpBandMax_ST'] = df['EpBandMax']
+
+    # Calculate final exposure and apply rounding and clipping
+    ep_band_max = base_exp * df['time_coeff']
+    ep_band_max_st = base_exp * df['var_coeff']
+
+    # Special case for very low volatility
+    ep_band_max_st = np.where((df['volatility_rank'] == 4) & (~df['spray_work']), ep_band_max, ep_band_max_st)
+
+    # Round down to 2 significant figures
+    df['EpBandMax'] = round_down_significant(pd.Series(ep_band_max, index=df.index), 2)
+    df['EpBandMax_ST'] = round_down_significant(pd.Series(ep_band_max_st, index=df.index), 2)
+
+    # Clipping final values
+    df['EpBandMax'] = df['EpBandMax'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
+    df['EpBandMax_ST'] = df['EpBandMax_ST'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
 
     return df
 
@@ -167,12 +184,34 @@ def calculate_dermal_risk_vectorized(df):
     df['evap_rate'] = np.where(df['prop_type'] == 1, evap_rate, 0)
 
     # Correctly handle the numpy array returned by np.where before calling .fillna
-    t_skin_raw = np.where(df['prop_type'] == 1, 7 / (df['jmax'] + df['evap_rate']), 3 / df['jmax'])
+    t_skin_raw = np.where(
+        df['prop_type'] == 1,
+        7 / (df['jmax'] + df['evap_rate']),
+        3 / (df['jmax'] + df['evap_rate']) # Corrected for solids
+    )
     t_skin = pd.Series(t_skin_raw, index=df.index).fillna(float('inf'))
     t_total = np.minimum(df['work_time_daily'] + t_skin, 10)
     glove_coeff = np.where(df['glove_type'] == 0.2, 0.2 * df['glove_edu'], 1.0)
-    df['Dermal_Abs'] = df['jmax'] * t_total * df['skin_area'] * glove_coeff
+
+    # Calculate final absorption and apply rounding
+    dermal_abs = df['jmax'] * t_total * df['skin_area'] * glove_coeff
+    df['Dermal_Abs'] = round_down_significant(dermal_abs, 2)
+
     return df
+
+def round_down_significant(series, num_significant_figures):
+    """
+    Rounds down a pandas Series to a specified number of significant figures.
+    Replicates VBA's `RoundDown(value, N - Int(Log(Abs(value))))`.
+    """
+    # Replace zero with a very small number to avoid log(0)
+    series = series.replace(0, 1e-9)
+    # Calculate the power of 10 for rounding
+    power = num_significant_figures - np.floor(np.log10(np.abs(series))) - 1
+    # Calculate the factor to multiply by
+    factor = 10 ** power
+    # Round down and then divide by the factor
+    return np.floor(series * factor) / factor
 
 def get_risk_level(rcr, is_dermal=False):
     """Helper to find risk level from an RCR value."""

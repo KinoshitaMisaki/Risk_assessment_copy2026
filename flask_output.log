@@ -7,30 +7,37 @@ Databases loaded successfully.
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 132-491-319
-127.0.0.1 - - [08/Jan/2026 04:46:49] "GET / HTTP/1.1" 200 -
-/app/app/logic/calculator.py:118: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+127.0.0.1 - - [08/Jan/2026 06:50:18] "GET / HTTP/1.1" 200 -
+/app/app/logic/calculator.py:121: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['OEL_ST'].fillna(df['濃度基準値'] * 3, inplace=True)
+/app/app/logic/calculator.py:123: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['OEL_ST'].fillna(df['OEL_8h'] * 3, inplace=True)
-/app/app/logic/calculator.py:119: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+/app/app/logic/calculator.py:124: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['OEL_ST'].fillna(df['ACR_Max'] * 3, inplace=True)
-/app/app/logic/calculator.py:145: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '[]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
+/app/app/logic/calculator.py:150: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '[]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
   df.loc[df['prop_type'] == 2, 'initial_ep'] = multi_index[df['prop_type'] == 2].map(sol_map)
-/app/app/logic/calculator.py:146: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+/app/app/logic/calculator.py:151: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['initial_ep'].fillna(0, inplace=True)
-/app/app/logic/calculator.py:146: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+/app/app/logic/calculator.py:151: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
   df['initial_ep'].fillna(0, inplace=True)
-127.0.0.1 - - [08/Jan/2026 04:46:49] "POST / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jan/2026 06:50:18] "POST / HTTP/1.1" 200 -
