@@ -85,12 +85,17 @@ def run_pipeline(df):
     return df
 
 def preprocess_and_normalize(df):
-    user_numeric_cols = [
+    # Combine all columns that need to be numeric into a single list
+    all_numeric_cols = [
+        # User inputs
         'amount_level', 'concentration', 'work_time_daily', 'freq_val',
-        'skin_area', 'glove_type', 'glove_edu', 'process_temp'
+        'skin_area', 'glove_type', 'glove_edu', 'process_temp',
+        # Substance data
+        'bp', 'flash_point', 'mw', 'log_kow', 'vp_val', 'water_sol_val', 'prop_type_raw'
     ]
-    for col in user_numeric_cols:
-        df[col] = pd.to_numeric(df.get(col), errors='coerce')
+    for col in all_numeric_cols:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce')
 
     df['vp_val_pa'] = df['vp_val'] * df['vp_unit'].map(constants.VP_CONVERSION).fillna(1)
     df['water_sol_mg_cm3'] = df['water_sol_val'] * df['water_sol_unit'].map(constants.WATER_SOL_CONVERSION).fillna(0)
