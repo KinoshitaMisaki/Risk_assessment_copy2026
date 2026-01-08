@@ -1,5 +1,6 @@
 # app/logic/physical_hazards.py
 import numpy as np
+import pandas as pd
 from .constants import RISK_LEVEL_MAP_PHYS
 
 # GHS_COLUMN_MAP will be created in app.py and columns will be renamed before calling this

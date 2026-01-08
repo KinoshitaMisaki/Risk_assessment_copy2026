@@ -165,16 +165,12 @@ def upload_file_route():
             os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
             result_df.to_csv(result_path, index=False, encoding='shift_jisx0213')
 
-            return redirect(url_for('download_file_route', name=result_filename))
+            return send_from_directory(os.path.abspath(app.config['DOWNLOAD_FOLDER']), result_filename, as_attachment=True)
         except Exception as e:
             flash(f"An error occurred during processing: {e}")
             return redirect(request.url)
 
     return render_template('index.html')
-
-@app.route('/downloads/<name>')
-def download_file_route(name):
-    return send_from_directory(app.config['DOWNLOAD_FOLDER'], name, as_attachment=True)
 
 if __name__ == '__main__':
     load_databases()

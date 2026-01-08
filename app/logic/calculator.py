@@ -85,21 +85,19 @@ def calculate_acr_max_vectorized(df):
 
     conditions = [cond_hl5, cond_hl4, cond_hl3, cond_hl2]
 
-    # Create choices arrays based on whether the substance is liquid or solid
-    liquid_choices = np.array(acr_choices_liquid[:-1])
-    solid_choices = np.array(acr_choices_solid[:-1])
+    # Build the list of choices dynamically based on whether the substance is liquid or solid
+    choices = [
+        np.where(is_liquid, acr_choices_liquid[0], acr_choices_solid[0]), # HL5
+        np.where(is_liquid, acr_choices_liquid[1], acr_choices_solid[1]), # HL4
+        np.where(is_liquid, acr_choices_liquid[2], acr_choices_solid[2]), # HL3
+        np.where(is_liquid, acr_choices_liquid[3], acr_choices_solid[3]), # HL2
+    ]
 
-    # `is_liquid` is a boolean Series. We need to expand its dimensions to match the conditions
-    is_liquid_expanded = np.transpose([is_liquid] * len(conditions))
-
-    # Use np.where to select between liquid and solid choices based on the is_liquid flag
-    choices = np.where(is_liquid_expanded, liquid_choices, solid_choices)
-
-    # Use np.select to assign the correct ACRmax value
+    # Use np.select with the correctly structured choices list
     df['ACR_Max'] = np.select(
-        [cond_hl5, cond_hl4, cond_hl3, cond_hl2],
+        conditions,
         choices,
-        default=np.where(is_liquid, acr_choices_liquid[-1], acr_choices_solid[-1])
+        default=np.where(is_liquid, acr_choices_liquid[-1], acr_choices_solid[-1]) # HL1
     )
 
     return df
@@ -168,7 +166,9 @@ def calculate_dermal_risk_vectorized(df):
     evap_rate = (beta * df['vp_val_pa'] * df['mw']) / (c['R'] * c['T'] * 10)
     df['evap_rate'] = np.where(df['prop_type'] == 1, evap_rate, 0)
 
-    t_skin = np.where(df['prop_type'] == 1, 7 / (df['jmax'] + df['evap_rate']), 3 / df['jmax']).fillna(float('inf'))
+    # Correctly handle the numpy array returned by np.where before calling .fillna
+    t_skin_raw = np.where(df['prop_type'] == 1, 7 / (df['jmax'] + df['evap_rate']), 3 / df['jmax'])
+    t_skin = pd.Series(t_skin_raw, index=df.index).fillna(float('inf'))
     t_total = np.minimum(df['work_time_daily'] + t_skin, 10)
     glove_coeff = np.where(df['glove_type'] == 0.2, 0.2 * df['glove_edu'], 1.0)
     df['Dermal_Abs'] = df['jmax'] * t_total * df['skin_area'] * glove_coeff
