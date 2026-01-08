@@ -83,6 +83,13 @@ def rename_columns(df):
 
 def run_pipeline(df):
     df = rename_columns(df)
+
+    # Enforce string type for all GHS columns to prevent accessor errors
+    ghs_cols = GHS_JP_TO_EN_MAP.values()
+    for col in ghs_cols:
+        if col in df.columns:
+            df[col] = df[col].astype(str)
+
     df = preprocess_user_csv_text(df)
     df = preprocess_and_normalize(df)
     df = calculator.determine_properties_vectorized(df)
