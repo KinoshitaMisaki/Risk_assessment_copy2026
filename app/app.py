@@ -25,8 +25,23 @@ GHS_JP_TO_EN_MAP = {
     '可燃性固体': 'GHS_FlamSol', '自己反応性化学品': 'GHS_SelfReact', '自然発火性液体': 'GHS_PyrLiq',
     '自然発火性固体': 'GHS_PyrSol', '自己発熱性化学品': 'GHS_SelfHeat',
     '水反応可燃性化学品': 'GHS_WaterReact', '酸化性液体': 'GHS_OxLiq', '酸化性固体': 'GHS_OxSol',
-    '有機過酸化物': 'GHS_OrgPerox', '金属腐食性化学品': 'GHS_MetCorr', # Corrected name
-    '鈍性化爆発物': 'GHS_InertExplosives'
+    '有機過酸化物': 'GHS_OrgPerox', '金属腐食性化学品': 'GHS_MetCorr',
+    '鈍性化爆発物': 'GHS_InertExplosives',
+    # Columns for ACRmax calculation
+    '急性毒性（経口）': 'GHS_AcuteTox_Oral',
+    '急性毒性（経皮）': 'GHS_AcuteTox_Dermal',
+    '急性毒性（吸入：ガス）': 'GHS_AcuteTox_Inhalation_Gas',
+    '急性毒性（吸入：蒸気）': 'GHS_AcuteTox_Inhalation_Vapor',
+    '急性毒性（吸入：粉塵、ミスト）': 'GHS_AcuteTox_Inhalation_Dust',
+    '皮膚腐食性／刺激性': 'GHS_SkinCorrosion_Irritation',
+    '眼に対する重篤な損傷性／眼刺激性': 'GHS_EyeDamage_Irritation',
+    '呼吸器感作性': 'GHS_RespiratorySensitizer',
+    '皮膚感作性': 'GHS_SkinSensitizer',
+    '生殖細胞変異原性': 'GHS_GermCellMutagenicity',
+    '発がん性': 'GHS_Carcinogenicity',
+    '生殖毒性': 'GHS_ReproductiveToxicity',
+    '特定標的臓器毒性（単回暴露）': 'GHS_STOT_Single',
+    '特定標的臓器毒性（反復暴露）': 'GHS_STOT_Repeated',
 }
 
 COLUMN_JP_TO_EN_MAP = {

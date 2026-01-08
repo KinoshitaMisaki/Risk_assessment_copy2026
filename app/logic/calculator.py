@@ -22,73 +22,83 @@ def determine_properties_vectorized(df):
     return df
 
 def calculate_acr_max_vectorized(df):
-    """Calculates ACRmax based on GHS classifications using vectorized operations."""
+    """Calculates ACRmax based on GHS classifications using corrected English column names."""
     is_liquid = df['prop_type'].isin([1, 3])
 
-    # Define conditions for each Hazard Level (HL) based on GHS columns
-    # Note: Assumes GHS columns from SubstanceList.csv are boolean-like (e.g., contain "区分1")
-    # A more robust implementation might involve creating boolean columns beforehand.
-
-    # Helper to check if a column contains any of the specified keywords
     def check_ghs(col_name, keywords):
-        if col_name not in df.columns:
-            return pd.Series(False, index=df.index)
-        # Combine keywords into a single regex pattern
+        if col_name not in df.columns: return pd.Series(False, index=df.index)
         pattern = '|'.join(keywords)
         return df[col_name].str.contains(pattern, na=False)
 
-    # HL5 Conditions (Highest Risk)
+    # Combine multiple inhalation columns into one composite check
+    inhalation_cols = ['GHS_AcuteTox_Inhalation_Gas', 'GHS_AcuteTox_Inhalation_Vapor', 'GHS_AcuteTox_Inhalation_Dust']
+    inhalation_present = df[inhalation_cols].notna().any(axis=1)
+
+    def check_inhalation(keywords):
+        return (check_ghs('GHS_AcuteTox_Inhalation_Gas', keywords) |
+                check_ghs('GHS_AcuteTox_Inhalation_Vapor', keywords) |
+                check_ghs('GHS_AcuteTox_Inhalation_Dust', keywords))
+
+    # HL5 Conditions
     cond_hl5 = (
-        check_ghs('急性毒性(吸入)', ['区分1']) |
-        (check_ghs('急性毒性(経口)', ['区分1']) & ~df['急性毒性(吸入)'].notna()) | # Oral only if inhalation is missing
-        check_ghs('発がん性', ['区分1A', '区分1B']) |
-        check_ghs('生殖細胞変異原性', ['区分1A', '区分1B'])
+        check_inhalation(['区分1']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分1']) & ~inhalation_present) |
+        check_ghs('GHS_Carcinogenicity', ['区分1A', '区分1B']) |
+        check_ghs('GHS_GermCellMutagenicity', ['区分1A', '区分1B'])
     )
 
     # HL4 Conditions
     cond_hl4 = (
-        check_ghs('急性毒性(吸入)', ['区分2']) |
-        (check_ghs('急性毒性(経口)', ['区分2']) & ~df['急性毒性(吸入)'].notna()) |
-        check_ghs('皮膚腐食性', ['区分1A']) |
-        check_ghs('呼吸器感作性', ['区分1', '区分1A', '区分1B']) |
-        check_ghs('発がん性', ['区分2']) |
-        check_ghs('生殖細胞変異原性', ['区分2']) |
-        check_ghs('生殖毒性', ['区分1A', '区分1B']) |
-        check_ghs('特定標的臓器毒性(反復)', ['区分1'])
+        check_inhalation(['区分2']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分2']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1A']) |
+        check_ghs('GHS_RespiratorySensitizer', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_Carcinogenicity', ['区分2']) |
+        check_ghs('GHS_GermCellMutagenicity', ['区分2']) |
+        check_ghs('GHS_ReproductiveToxicity', ['区分1A', '区分1B']) |
+        check_ghs('GHS_STOT_Repeated', ['区分1'])
     )
 
     # HL3 Conditions
     cond_hl3 = (
-        check_ghs('急性毒性(吸入)', ['区分3']) |
-        (check_ghs('急性毒性(経口)', ['区分3']) & ~df['急性毒性(吸入)'].notna()) |
-        check_ghs('皮膚腐食性', ['区分1B', '区分1C']) |
-        check_ghs('眼に対する重篤な損傷性', ['区分1']) |
-        check_ghs('皮膚感作性', ['区分1', '区分1A', '区分1B']) |
-        check_ghs('生殖毒性', ['区分2']) |
-        check_ghs('特定標的臓器毒性(単回)', ['区分1']) |
-        check_ghs('特定標的臓器毒性(反復)', ['区分2'])
+        check_inhalation(['区分3']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分3']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1B', '区分1C']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['区分1']) |
+        check_ghs('GHS_SkinSensitizer', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_ReproductiveToxicity', ['区分2']) |
+        check_ghs('GHS_STOT_Single', ['区分1']) |
+        check_ghs('GHS_STOT_Repeated', ['区分2'])
     )
 
     # HL2 Conditions
     cond_hl2 = (
-        check_ghs('急性毒性(吸入)', ['区分4']) |
-        (check_ghs('急性毒性(経口)', ['区分4']) & ~df['急性毒性(吸入)'].notna()) |
-        check_ghs('皮膚刺激性', ['区分2']) |
-        check_ghs('眼に対する刺激性', ['区分2A', '区分2B']) |
-        check_ghs('特定標的臓器毒性(単回)', ['区分2', '区分3'])
+        check_inhalation(['区分4']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分4']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分2']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['区分2A', '区分2B']) |
+        check_ghs('GHS_STOT_Single', ['区分2', '区分3'])
     )
 
-    # Define choices for liquid and solid based on hazard levels
     acr_choices_liquid = [0.05, 0.5, 5, 50, 500]
     acr_choices_solid = [0.001, 0.01, 0.1, 1, 10]
 
-    # Create a list of conditions in order of priority (HL5, HL4, HL3, HL2)
     conditions = [cond_hl5, cond_hl4, cond_hl3, cond_hl2]
+
+    # Create choices arrays based on whether the substance is liquid or solid
+    liquid_choices = np.array(acr_choices_liquid[:-1])
+    solid_choices = np.array(acr_choices_solid[:-1])
+
+    # `is_liquid` is a boolean Series. We need to expand its dimensions to match the conditions
+    is_liquid_expanded = np.transpose([is_liquid] * len(conditions))
+
+    # Use np.where to select between liquid and solid choices based on the is_liquid flag
+    choices = np.where(is_liquid_expanded, liquid_choices, solid_choices)
 
     # Use np.select to assign the correct ACRmax value
     df['ACR_Max'] = np.select(
-        conditions,
-        np.where(is_liquid[:, None], acr_choices_liquid[:-1], acr_choices_solid[:-1]).T,
+        [cond_hl5, cond_hl4, cond_hl3, cond_hl2],
+        choices,
         default=np.where(is_liquid, acr_choices_liquid[-1], acr_choices_solid[-1])
     )
 
