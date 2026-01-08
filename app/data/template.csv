@@ -1,0 +1,3 @@
+CAS_RN,Product_Name,amount_level,spray_work,area_high,ventilation,work_time_daily,freq_type,freq_val,exposure_variation,skin_area,glove_type,glove_edu,process_temp,ignition_source,explosive_atm,metal_contact,water_contact,concentration,target_inh,target_derm,target_phys
+67-64-1,アセトン,中量 (1L以上～1000L未満),いいえ,いいえ,換気レベルC（工業的な全体換気、屋外作業）,30分以下,週1回以上,5,ばく露濃度の変動が小さい作業,片手の手のひら付着,耐透過性・耐浸透性の手袋の着用している,基本的な教育や訓練を行っている,室温,はい,はい,いいえ,いいえ,100,True,True,True
+7732-18-5,水,微量 (10mL以上～100mL未満),はい,いいえ,換気レベルA（特に換気のない部屋）,8時間超,週1回未満,1,ばく露濃度の変動が大きい作業,大きなコインのサイズ、小さな飛沫,手袋を着用していない,教育や訓練を行っていない,室温以上,いいえ,いいえ,いいえ,いいえ,100,True,True,False

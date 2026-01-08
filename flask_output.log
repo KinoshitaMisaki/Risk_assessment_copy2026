@@ -7,3 +7,5 @@ Databases loaded successfully.
  * Restarting with stat
  * Debugger is active!
  * Debugger PIN: 132-491-319
+127.0.0.1 - - [08/Jan/2026 02:37:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [08/Jan/2026 02:37:50] "[32mPOST / HTTP/1.1[0m" 302 -

@@ -5,7 +5,7 @@ from flask import Flask, request, render_template, send_from_directory, flash, r
 from werkzeug.utils import secure_filename
 import numpy as np
 
-from logic import calculator, physical_hazards, constants
+from logic import calculator, physical_hazards, constants, input_mapping
 
 # --- Configuration & Setup ---
 UPLOAD_FOLDER = 'uploads'
@@ -59,8 +59,16 @@ def load_databases():
 
 # --- Calculation Pipeline ---
 
+def preprocess_user_csv_text(df):
+    """Converts text-based user input into numeric/boolean values using mappings."""
+    for col, mapping in input_mapping.ALL_MAPPINGS.items():
+        if col in df.columns:
+            df[col] = df[col].map(mapping)
+    return df
+
 def run_pipeline(df):
     """Orchestrates the calculation pipeline by calling logic modules."""
+    df = preprocess_user_csv_text(df)
     df = preprocess_and_normalize(df)
     df = calculator.determine_properties_vectorized(df)
     df = calculator.calculate_acr_max_vectorized(df)
@@ -125,7 +133,7 @@ def upload_file_route():
         file.save(upload_path)
 
         try:
-            user_df = pd.read_csv(upload_path, encoding='cp932')
+            user_df = pd.read_csv(upload_path, encoding='utf-8')
             merged_df = user_df.merge(df_substance, left_on='CAS_RN', right_index=True, how='left')
             result_df = run_pipeline(merged_df)
 
