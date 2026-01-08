@@ -1,0 +1,151 @@
+# app.py
+import os
+import pandas as pd
+from flask import Flask, request, render_template, send_from_directory, flash, redirect, url_for
+from werkzeug.utils import secure_filename
+import numpy as np
+
+from logic import calculator, physical_hazards, constants
+
+# --- Configuration & Setup ---
+UPLOAD_FOLDER = 'uploads'
+DOWNLOAD_FOLDER = 'downloads'
+ALLOWED_EXTENSIONS = {'csv'}
+app = Flask(__name__)
+app.config.from_mapping(UPLOAD_FOLDER=UPLOAD_FOLDER, DOWNLOAD_FOLDER=DOWNLOAD_FOLDER, SECRET_KEY='supersecretkey')
+
+# --- Data Loading ---
+df_substance = pd.DataFrame()
+df_glove = pd.DataFrame()
+
+# Mapping from Japanese CSV headers to internal English names
+GHS_JP_TO_EN_MAP = {
+    '爆発物': 'GHS_Explosives', '引火性ガス': 'GHS_FlamGas', 'エアゾール': 'GHS_Aerosol',
+    '酸化性ガス': 'GHS_OxGas', '高圧ガス': 'GHS_GasesUnderPressure', '引火性液体': 'GHS_FlamLiq',
+    '可燃性固体': 'GHS_FlamSol', '自己反応性化学品': 'GHS_SelfReact', '自然発火性液体': 'GHS_PyrLiq',
+    '自然発火性固体': 'GHS_PyrSol', '自己発熱性化学品': 'GHS_SelfHeat',
+    '水反応可燃性化学品': 'GHS_WaterReact', '酸化性液体': 'GHS_OxLiq', '酸化性固体': 'GHS_OxSol',
+    '有機過酸化物': 'GHS_OrgPerox', '金属腐食性': 'GHS_MetCorr',
+    '鈍性化爆発物': 'GHS_InertExplosives'
+}
+
+# Mapping for other required columns
+COLUMN_JP_TO_EN_MAP = {
+    '沸点': 'bp', '引火点': 'flash_point', '分子量': 'mw', 'LogKow': 'log_kow',
+    '蒸気圧(値)': 'vp_val', '蒸気圧(単位)': 'vp_unit',
+    '水溶解度(値)': 'water_sol_val', '水溶解度(単位)': 'water_sol_unit',
+    '性状': 'prop_type_raw'
+}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def load_databases():
+    global df_substance, df_glove
+    try:
+        substance_path = os.path.join(os.path.dirname(__file__), 'data', 'SubstanceList.csv')
+        df_substance = pd.read_csv(substance_path, encoding='cp932', header=3, low_memory=False)
+
+        # Rename all columns at once for efficiency
+        df_substance.rename(columns={**GHS_JP_TO_EN_MAP, **COLUMN_JP_TO_EN_MAP}, inplace=True)
+        df_substance.set_index('CAS RN', inplace=True)
+
+        glove_path = os.path.join(os.path.dirname(__file__), 'data', 'GloveData.csv')
+        df_glove = pd.read_csv(glove_path, encoding='cp932')
+        df_glove.set_index(df_glove.columns[0], inplace=True)
+        print("Databases loaded successfully.")
+    except Exception as e:
+        print(f"Error loading databases: {e}")
+
+# --- Calculation Pipeline ---
+
+def run_pipeline(df):
+    """Orchestrates the calculation pipeline by calling logic modules."""
+    df = preprocess_and_normalize(df)
+    df = calculator.determine_properties_vectorized(df)
+    df = calculator.calculate_acr_max_vectorized(df)
+    df = calculator.select_oel_vectorized(df)
+
+    df = calculator.calculate_inhalation_risk_vectorized(df)
+    df = calculator.calculate_dermal_risk_vectorized(df)
+
+    df = calculate_final_rcr_and_levels(df)
+
+    phys_results = df.apply(physical_hazards.calculate_physical_hazards, axis=1, result_type='expand')
+    df[['Phys_Score_Max', 'Risk_Level_Phys', 'Phys_Risk_Factors']] = phys_results
+
+    return df
+
+def preprocess_and_normalize(df):
+    """Prepares the merged dataframe, normalizes units."""
+    # Convert user-provided columns to numeric types, coercing errors
+    user_numeric_cols = [
+        'amount_level', 'concentration', 'work_time_daily', 'freq_val',
+        'skin_area', 'glove_type', 'glove_edu', 'process_temp'
+    ]
+    for col in user_numeric_cols:
+        df[col] = pd.to_numeric(df.get(col), errors='coerce')
+
+    # Unit Normalization using vectorized operations
+    df['vp_val_pa'] = df['vp_val'] * df['vp_unit'].map(constants.VP_CONVERSION).fillna(1)
+    df['water_sol_mg_cm3'] = df['water_sol_val'] * df['water_sol_unit'].map(constants.WATER_SOL_CONVERSION).fillna(0)
+
+    return df
+
+def calculate_final_rcr_and_levels(df):
+    """Calculates final RCRs and risk levels for all assessment types."""
+    oel_target = df['OEL_8h'].fillna(df['ACR_Max'])
+    df['RCR_Inhalation'] = df['EpBandMax'] / oel_target
+    df['Risk_Level_Inh'] = df['RCR_Inhalation'].apply(lambda x: calculator.get_risk_level(x, is_dermal=False))
+
+    oel_target_st = df['OEL_ST']
+    df['RCR_Inh_ST'] = df['EpBandMax_ST'] / oel_target_st
+    df['Risk_Level_Inh_ST'] = df['RCR_Inh_ST'].apply(lambda x: calculator.get_risk_level(x, is_dermal=False))
+
+    base = df['OEL_8h'].fillna(df['ACR_Max'])
+    oel_dermal_liq = (df['mw'] / 24.45) * base * 0.75 * 10
+    oel_dermal_sol = base * 0.75 * 10
+    df['OEL_Dermal'] = np.where(df['prop_type'].isin([1, 3]), oel_dermal_liq, oel_dermal_sol)
+    df['RCR_Dermal'] = df['Dermal_Abs'] / df['OEL_Dermal']
+    df['Risk_Level_Derm'] = df['RCR_Dermal'].apply(lambda x: calculator.get_risk_level(x, is_dermal=True))
+    return df
+
+# --- Flask Routes ---
+@app.route('/', methods=['GET', 'POST'])
+def upload_file_route():
+    if request.method == 'POST':
+        file = request.files.get('file')
+        if not file or not file.filename or not allowed_file(file.filename):
+            flash('Invalid file. Please upload a CSV.')
+            return redirect(request.url)
+
+        filename = secure_filename(file.filename)
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        file.save(upload_path)
+
+        try:
+            user_df = pd.read_csv(upload_path, encoding='cp932')
+            merged_df = user_df.merge(df_substance, left_on='CAS_RN', right_index=True, how='left')
+            result_df = run_pipeline(merged_df)
+
+            result_filename = f"result_{filename}"
+            result_path = os.path.join(app.config['DOWNLOAD_FOLDER'], result_filename)
+            os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
+            # Use a more compatible Shift_JIS variant
+            result_df.to_csv(result_path, index=False, encoding='shift_jisx0213')
+
+            return redirect(url_for('download_file_route', name=result_filename))
+        except Exception as e:
+            flash(f"An error occurred during processing: {e}")
+            return redirect(request.url)
+
+    return render_template('index.html')
+
+@app.route('/downloads/<name>')
+def download_file_route(name):
+    return send_from_directory(app.config['DOWNLOAD_FOLDER'], name, as_attachment=True)
+
+if __name__ == '__main__':
+    load_databases()
+    app.run(debug=True)
