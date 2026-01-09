@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 from . import constants
+import logging
 
 def determine_properties_vectorized(df):
     """Vectorized determination of property type and volatility rank."""
@@ -132,11 +133,25 @@ def calculate_inhalation_risk_vectorized(df):
     df.loc[(df['volatility_rank'] == 4) & (~df['spray_work']), 'venti_coeff'] = 1
     df['var_coeff'] = df['exposure_variation']
 
-    weekly_cond = (df['freq_type'] == 1)
-    work_hours_week = df['work_time_daily'] * df['freq_val']
-    cond1 = weekly_cond & ((work_hours_week > 40) | ((df['work_time_daily'] > 8) & (df['freq_val'] >= 3)))
-    cond2 = weekly_cond & (work_hours_week <= 4)
-    df['time_coeff'] = np.select([cond1, cond2], [10, 0.1], default=1.0)
+    # --- Time Coeff (time_coeff) - For 8h assessment (VBA logic recreation) ---
+    df['time_coeff'] = 1.0 # Default value
+
+    # --- Freq_type == 1 (Weekly) ---
+    is_weekly = df['freq_type'] == 1
+    cond_weekly_10 = ((df['work_time_daily'] * df['freq_val'] > 40) |
+                      ((df['work_time_daily'] > 8) & (df['freq_val'] >= 3)))
+    cond_weekly_01 = (df['work_time_daily'] * df['freq_val'] < 4) # Changed <= to < to align with VBA
+
+    df.loc[is_weekly & cond_weekly_10, 'time_coeff'] = 10.0
+    df.loc[is_weekly & cond_weekly_01, 'time_coeff'] = 0.1
+
+    # --- Freq_type == 0 (Not Weekly) ---
+    is_not_weekly = df['freq_type'] == 0
+    # Spec: (work_time * freq_val * 12) > 192 -> 1, else 0.1
+    cond_not_weekly_1 = (df['work_time_daily'] * df['freq_val'] * 12 > 192)
+
+    df.loc[is_not_weekly, 'time_coeff'] = 0.1 # Default for not weekly
+    df.loc[is_not_weekly & cond_not_weekly_1, 'time_coeff'] = 1.0
 
     # Create MultiIndex for mapping
     multi_index = pd.MultiIndex.from_frame(df[['amount_level', 'volatility_rank']])
@@ -166,6 +181,21 @@ def calculate_inhalation_risk_vectorized(df):
     # Clipping final values
     df['EpBandMax'] = df['EpBandMax'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
     df['EpBandMax_ST'] = df['EpBandMax_ST'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
+
+    # --- Debug Logging for Acetone ---
+    acetone_row = df[df['CAS_RN'] == '67-64-1']
+    if not acetone_row.empty:
+        logging.info(f"--- Inhalation Risk Calculation for 67-64-1 ---")
+        logging.info(f"  - Initial EP: {acetone_row['initial_ep'].iloc[0]}")
+        logging.info(f"  - Conc Coeff: {acetone_row['conc_coeff'].iloc[0]}")
+        logging.info(f"  - Spray Coeff: {acetone_row['spray_coeff'].iloc[0]}")
+        logging.info(f"  - Area Coeff: {acetone_row['area_coeff'].iloc[0]}")
+        logging.info(f"  - Venti Coeff: {acetone_row['venti_coeff'].iloc[0]}")
+        logging.info(f"  - Time Coeff (8h): {acetone_row['time_coeff'].iloc[0]}")
+        logging.info(f"  - Var Coeff (ST): {acetone_row['var_coeff'].iloc[0]}")
+        logging.info(f"  - Final EpBandMax (8h): {acetone_row['EpBandMax'].iloc[0]}")
+        logging.info(f"  - Final EpBandMax_ST (ST): {acetone_row['EpBandMax_ST'].iloc[0]}")
+        logging.info(f"----------------------------------------------------")
 
     return df
 
@@ -199,19 +229,27 @@ def calculate_dermal_risk_vectorized(df):
 
     return df
 
-def round_down_significant(series, num_significant_figures):
+def round_down_significant(series, num_significant_figures=2):
     """
-    Rounds down a pandas Series to a specified number of significant figures.
-    Replicates VBA's `RoundDown(value, N - Int(Log(Abs(value))))`.
+    Rounds down a pandas Series to a specified number of significant figures,
+    perfectly replicating the VBA's `RoundDown(value, 2 - Int(Log(Abs(value))))` logic.
     """
-    # Replace zero with a very small number to avoid log(0)
-    series = series.replace(0, 1e-9)
-    # Calculate the power of 10 for rounding
-    power = num_significant_figures - np.floor(np.log10(np.abs(series))) - 1
-    # Calculate the factor to multiply by
-    factor = 10 ** power
-    # Round down and then divide by the factor
-    return np.floor(series * factor) / factor
+    # Handle non-positive values, which cannot be logged
+    is_positive = series > 0
+    result = pd.Series(np.nan, index=series.index)
+
+    positive_series = series[is_positive]
+    if not positive_series.empty:
+        # Calculate the number of decimal places for rounding down
+        power = num_significant_figures - np.floor(np.log10(positive_series)) - 1
+        # Calculate the factor to multiply by
+        factor = 10 ** power
+        # Round down and then divide by the factor
+        result[is_positive] = np.floor(positive_series * factor) / factor
+
+    # Handle zero and negative values separately
+    result.fillna(0, inplace=True)
+    return result
 
 def get_risk_level(rcr, is_dermal=False):
     """Helper to find risk level from an RCR value."""

@@ -4,8 +4,13 @@ import pandas as pd
 from flask import Flask, request, render_template, send_from_directory, flash, redirect, url_for
 from werkzeug.utils import secure_filename
 import numpy as np
+import logging
 
 from logic import calculator, physical_hazards, constants, input_mapping
+
+# --- Logging Setup ---
+logging.basicConfig(filename='debug.log', level=logging.INFO,
+                    format='%(asctime)s %(levelname)s:%(message)s', filemode='w')
 
 # --- Configuration & Setup ---
 UPLOAD_FOLDER = 'uploads'
@@ -82,7 +87,24 @@ def rename_columns(df):
     return df
 
 def run_pipeline(df):
+    print("--- 1. After Merge ---")
+    print(df.columns)
+    print(df.head(1).to_string())
+    print("-" * 20)
+
+    df = preprocess_user_csv_text(df)
+
+    print("--- 2. After Text-to-Numeric Mapping ---")
+    print(df.columns)
+    print(df.head(1).to_string())
+    print("-" * 20)
+
     df = rename_columns(df)
+
+    print("--- 3. After Renaming ---")
+    print(df.columns)
+    print(df.head(1).to_string())
+    print("-" * 20)
 
     # Enforce string type for all GHS columns to prevent accessor errors
     ghs_cols = GHS_JP_TO_EN_MAP.values()
@@ -90,7 +112,6 @@ def run_pipeline(df):
         if col in df.columns:
             df[col] = df[col].astype(str)
 
-    df = preprocess_user_csv_text(df)
     df = preprocess_and_normalize(df)
     df = calculator.determine_properties_vectorized(df)
     df = calculator.calculate_acr_max_vectorized(df)

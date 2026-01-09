@@ -21,14 +21,14 @@ VP_CONVERSION = {
 # Liquids (ppm)
 INITIAL_EP_LIQUID = {
     # Amount Level (row) x Volatility Rank (col)
-    # Corrected based on VBA implementation review
+    # Corrected based on VBA implementation review (values are 5x lower than spec)
     # Rows: 1:大, 2:中, 3:小, 4:微, 5:極
     # Cols: 1:高, 2:中, 3:低, 4:極低
-    (1, 1): 5000, (1, 2): 500, (1, 3): 50, (1, 4): 5,
-    (2, 1): 500,  (2, 2): 500, (2, 3): 50, (2, 4): 5,
-    (3, 1): 50,   (3, 2): 50,  (3, 3): 5,  (3, 4): 0.5,
-    (4, 1): 50,   (4, 2): 5,   (4, 3): 5,  (4, 4): 0.5, # Corrected (4,1) from 5 to 50
-    (5, 1): 5,    (5, 2): 5,   (5, 3): 0.5,(5, 4): 0.05, # Corrected (5,1) from 0.5 to 5
+    (1, 1): 1000, (1, 2): 100, (1, 3): 10, (1, 4): 1,
+    (2, 1): 100,  (2, 2): 100, (2, 3): 10, (2, 4): 1,
+    (3, 1): 10,   (3, 2): 10,  (3, 3): 1,  (3, 4): 0.1,
+    (4, 1): 10,   (4, 2): 1,   (4, 3): 1,  (4, 4): 0.1,
+    (5, 1): 1,    (5, 2): 1,   (5, 3): 0.1,(5, 4): 0.01,
 }
 
 # Solids (mg/m^3)

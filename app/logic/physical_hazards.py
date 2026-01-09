@@ -93,15 +93,19 @@ def ox_gas(row):
 def pressure_gas(row):
     scores = {"": {1:2, 2:2, 3:2, 4:1, 5:1}} # Any classification triggers this
     cls = row.get('GHS_GasesUnderPressure')
-    if pd.isna(cls) or cls in ["-", "分類対象外", "区分なし"]: return 0, ""
+    if pd.isna(cls) or cls in ["-", "分類対象外", "区分なし", "nan"]: return 0, ""
     return _get_basic_score(row['amount_level'], scores[""]), f"高圧ガス {cls}"
 
 @hazard_calculator
 def flam_liq(row):
     ghs_class = row.get('GHS_FlamLiq')
     if pd.isna(ghs_class) or ghs_class in ["-", "分類対象外", "区分なし"]: return 0, ""
-    if row['process_temp'] >= 50 and row['flash_point'] < row['process_temp']:
-        score = 5
+
+    # Corrected logic based on VBA: elevated risk if process temp > flash point
+    if row['process_temp'] > row['flash_point']:
+        amount = row['amount_level']
+        scores = {1:5, 2:5, 3:4, 4:3, 5:2}
+        score = scores.get(amount, 0)
     else:
         scores = {"1": {1:5, 2:5, 3:4, 4:3, 5:2}, "2": {1:5, 2:5, 3:4, 4:3, 5:2}, "3": {1:4, 2:3, 3:2, 4:2, 5:2}, "4": {1:3, 2:2, 3:2, 4:2, 5:1}}
         cls = _find_class(ghs_class, scores)
@@ -191,7 +195,7 @@ def met_corr(row):
 def inert_expl(row):
     scores = {"": 5}
     cls = row.get('GHS_InertExplosives')
-    if pd.isna(cls) or cls in ["-", "分類対象外", "区分なし"]: return 0, ""
+    if pd.isna(cls) or cls in ["-", "分類対象外", "区分なし", "nan"]: return 0, ""
     return 5, f"鈍性化爆発物 {cls}"
 
 # --- Main Calculation Function ---
