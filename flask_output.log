@@ -1,6 +1,12 @@
 Databases loaded successfully.
  * Serving Flask app 'app'
  * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 132-491-319
 Databases loaded successfully.
 --- 1. After Merge ---
 Index(['CAS_RN', 'Product_Name', 'amount_level', 'spray_work', 'area_high',
@@ -31,35 +37,30 @@ Index(['CAS_RN', 'Product_Name', 'amount_level', 'spray_work', 'area_high',
        ...
        '皮膚等障害化学物質の裾切値', '第１類', '第２類', '第３類', '裾切', '第１類.1', '第２類.1', '第３類.1',
        'Unnamed: 91', 'Unnamed: 92'],
-      dtype='object', length=114)/app/app/logic/calculator.py:122: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
-The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
-
-For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
-
-
-  df['OEL_ST'].fillna(df['濃度基準値'] * 3, inplace=True)
-/app/app/logic/calculator.py:124: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+      dtype='object', length=114)/app/app/logic/calculator.py:133: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['OEL_ST'].fillna(df['OEL_8h'] * 3, inplace=True)
-/app/app/logic/calculator.py:125: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+/app/app/logic/calculator.py:134: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['OEL_ST'].fillna(df['ACR_Max'] * 3, inplace=True)
-/app/app/logic/calculator.py:165: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '[]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
+/app/app/logic/calculator.py:183: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '[]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
   df.loc[df['prop_type'] == 2, 'initial_ep'] = multi_index[df['prop_type'] == 2].map(sol_map)
-/app/app/logic/calculator.py:166: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+/app/app/logic/calculator.py:184: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
 The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
 
 For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
 
 
   df['initial_ep'].fillna(0, inplace=True)
-/app/app/logic/calculator.py:166: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+/app/app/logic/calculator.py:184: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
   df['initial_ep'].fillna(0, inplace=True)
+127.0.0.1 - - [13/Jan/2026 01:46:21] "POST / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Jan/2026 01:46:21] "POST / HTTP/1.1" 200 -

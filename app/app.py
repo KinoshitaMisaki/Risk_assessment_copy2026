@@ -8,10 +8,6 @@ import logging
 
 from logic import calculator, physical_hazards, constants, input_mapping
 
-# --- Logging Setup ---
-logging.basicConfig(filename='debug.log', level=logging.INFO,
-                    format='%(asctime)s %(levelname)s:%(message)s', filemode='w')
-
 # --- Configuration & Setup ---
 UPLOAD_FOLDER = 'uploads'
 DOWNLOAD_FOLDER = 'downloads'
@@ -178,7 +174,13 @@ def upload_file_route():
 
         try:
             user_df = pd.read_csv(upload_path, encoding='utf-8')
+            # Add logging to inspect the initial dataframe
+            logging.info("--- 1. After User CSV Load ---")
+            logging.info(user_df.columns)
+            logging.info(user_df.head())
+
             merged_df = user_df.merge(df_substance, left_on='CAS_RN', right_index=True, how='left')
+
             result_df = run_pipeline(merged_df)
 
             result_filename = f"result_{filename}"
@@ -186,12 +188,26 @@ def upload_file_route():
             os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
             result_df.to_csv(result_path, index=False, encoding='shift_jisx0213')
 
-            return send_from_directory(os.path.abspath(app.config['DOWNLOAD_FOLDER']), result_filename, as_attachment=True)
+            # Convert dataframe to HTML table for display
+            result_table = result_df.to_html(classes='table-auto w-full text-left whitespace-no-wrap', index=False)
+
+            return render_template('result.html', result_table=result_table, filename=result_filename)
+
         except Exception as e:
             flash(f"An error occurred during processing: {e}")
+            logging.error(f"Error processing file: {e}", exc_info=True)
             return redirect(request.url)
 
     return render_template('index.html')
+
+@app.route('/download/<filename>')
+def download_file(filename):
+    """Route to download a file from the DOWNLOAD_FOLDER."""
+    return send_from_directory(
+        os.path.abspath(app.config['DOWNLOAD_FOLDER']),
+        filename,
+        as_attachment=True
+    )
 
 if __name__ == '__main__':
     load_databases()

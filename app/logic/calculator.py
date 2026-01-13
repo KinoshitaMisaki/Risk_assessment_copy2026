@@ -2,7 +2,6 @@
 import numpy as np
 import pandas as pd
 from . import constants
-import logging
 
 def determine_properties_vectorized(df):
     """Vectorized determination of property type and volatility rank."""
@@ -42,43 +41,43 @@ def calculate_acr_max_vectorized(df):
 
     # HL5 Conditions
     cond_hl5 = (
-        check_inhalation(['1']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['1']) & ~inhalation_present) |
-        check_ghs('GHS_Carcinogenicity', ['1', '1A', '1B']) |
-        check_ghs('GHS_GermCellMutagenicity', ['1', '1A', '1B'])
+        check_inhalation(['区分1']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分1']) & ~inhalation_present) |
+        check_ghs('GHS_Carcinogenicity', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_GermCellMutagenicity', ['区分1', '区分1A', '区分1B'])
     )
 
     # HL4 Conditions
     cond_hl4 = (
-        check_inhalation(['2']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['2']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['1A']) |
-        check_ghs('GHS_RespiratorySensitizer', ['1', '1A', '1B']) |
-        check_ghs('GHS_Carcinogenicity', ['2', '2A', '2B']) |
-        check_ghs('GHS_GermCellMutagenicity', ['2', '2A', '2B']) |
-        check_ghs('GHS_ReproductiveToxicity', ['1', '1A', '1B']) |
-        check_ghs('GHS_STOT_Repeated', ['1'])
+        check_inhalation(['区分2']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分2']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1A']) |
+        check_ghs('GHS_RespiratorySensitizer', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_Carcinogenicity', ['区分2', '区分2A', '区分2B']) |
+        check_ghs('GHS_GermCellMutagenicity', ['区分2', '区分2A', '区分2B']) |
+        check_ghs('GHS_ReproductiveToxicity', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_STOT_Repeated', ['区分1'])
     )
 
     # HL3 Conditions
     cond_hl3 = (
-        check_inhalation(['3']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['3']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['1', '1B', '1C']) |
-        check_ghs('GHS_EyeDamage_Irritation', ['1']) |
-        check_ghs('GHS_SkinSensitizer', ['1', '1A', '1B']) |
-        check_ghs('GHS_ReproductiveToxicity', ['2']) |
-        check_ghs('GHS_STOT_Single', ['1']) |
-        check_ghs('GHS_STOT_Repeated', ['2'])
+        check_inhalation(['区分3']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分3']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分1B', '区分1C', '区分1']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['区分1']) |
+        check_ghs('GHS_SkinSensitizer', ['区分1', '区分1A', '区分1B']) |
+        check_ghs('GHS_ReproductiveToxicity', ['区分2']) |
+        check_ghs('GHS_STOT_Single', ['区分1']) |
+        check_ghs('GHS_STOT_Repeated', ['区分2'])
     )
 
     # HL2 Conditions
     cond_hl2 = (
-        check_inhalation(['4']) |
-        (check_ghs('GHS_AcuteTox_Oral', ['4']) & ~inhalation_present) |
-        check_ghs('GHS_SkinCorrosion_Irritation', ['2']) |
-        check_ghs('GHS_EyeDamage_Irritation', ['2']) |
-        check_ghs('GHS_STOT_Single', ['2', '3'])
+        check_inhalation(['区分4']) |
+        (check_ghs('GHS_AcuteTox_Oral', ['区分4']) & ~inhalation_present) |
+        check_ghs('GHS_SkinCorrosion_Irritation', ['区分2']) |
+        check_ghs('GHS_EyeDamage_Irritation', ['区分2', '区分2A', '区分2B']) |
+        check_ghs('GHS_STOT_Single', ['区分2', '区分3'])
     )
 
     acr_choices_liquid = [0.05, 0.5, 5, 50, 500]
@@ -104,23 +103,33 @@ def calculate_acr_max_vectorized(df):
     return df
 
 def select_oel_vectorized(df):
-    """Selects OEL values based on priority."""
+    """
+    Selects OEL values based on priority, finding the first available valid value
+    across multiple columns, exactly replicating the VBA logic in a robust way.
+    """
+    # Define columns in order of priority
     oel_8h_cols = ['濃度基準値', '日本産業衛生学会 許容濃度', 'ACGIH TLV-TWA', 'DFG MAK']
     oel_st_cols = ['濃度基準値(短時間)', '日本産業衛生学会 (天井値)', 'ACGIH TLV-STEL']
 
-    # Ensure columns exist, fill with NaN if not
-    for col in oel_8h_cols + oel_st_cols:
-        if col not in df.columns:
-            df[col] = np.nan
+    # Initialize OEL columns with NaN
+    df['OEL_8h'] = np.nan
+    df['OEL_ST'] = np.nan
 
-    # Find the minimum available OEL for 8h and Short Term, replicating VBA logic
-    df['OEL_8h'] = df[oel_8h_cols].min(axis=1)
-    df['OEL_ST'] = df[oel_st_cols].min(axis=1)
+    # For 8h OEL, iterate through columns by priority and fill missing values
+    for col in oel_8h_cols:
+        if col in df.columns:
+            # Coerce to numeric, turning non-numeric into NaN
+            numeric_col = pd.to_numeric(df[col], errors='coerce')
+            # Fill NaN in 'OEL_8h' with the first valid (positive) value from the current priority column
+            df['OEL_8h'].fillna(numeric_col[numeric_col > 0], inplace=True)
+
+    # For Short Term OEL, do the same
+    for col in oel_st_cols:
+        if col in df.columns:
+            numeric_col = pd.to_numeric(df[col], errors='coerce')
+            df['OEL_ST'].fillna(numeric_col[numeric_col > 0], inplace=True)
 
     # Fallback for OEL_ST, ensuring alignment with VBA logic
-    # First, try to fill with a direct calculation from an 8h value if one exists ('濃度基準値' is 'oelConcentrationStandard8Hour')
-    df['OEL_ST'].fillna(df['濃度基準値'] * 3, inplace=True)
-    # Then, use the calculated minimum 8h OEL
     df['OEL_ST'].fillna(df['OEL_8h'] * 3, inplace=True)
     df['OEL_ST'].fillna(df['ACR_Max'] * 3, inplace=True)
     return df
@@ -134,24 +143,33 @@ def calculate_inhalation_risk_vectorized(df):
     df['var_coeff'] = df['exposure_variation']
 
     # --- Time Coeff (time_coeff) - For 8h assessment (VBA logic recreation) ---
-    df['time_coeff'] = 1.0 # Default value
-
-    # --- Freq_type == 1 (Weekly) ---
+    # Replicating If...ElseIf...Else logic with np.select for correctness
     is_weekly = df['freq_type'] == 1
-    cond_weekly_10 = ((df['work_time_daily'] * df['freq_val'] > 40) |
-                      ((df['work_time_daily'] > 8) & (df['freq_val'] >= 3)))
-    cond_weekly_01 = (df['work_time_daily'] * df['freq_val'] < 4) # Changed <= to < to align with VBA
-
-    df.loc[is_weekly & cond_weekly_10, 'time_coeff'] = 10.0
-    df.loc[is_weekly & cond_weekly_01, 'time_coeff'] = 0.1
-
-    # --- Freq_type == 0 (Not Weekly) ---
     is_not_weekly = df['freq_type'] == 0
-    # Spec: (work_time * freq_val * 12) > 192 -> 1, else 0.1
-    cond_not_weekly_1 = (df['work_time_daily'] * df['freq_val'] * 12 > 192)
 
-    df.loc[is_not_weekly, 'time_coeff'] = 0.1 # Default for not weekly
-    df.loc[is_not_weekly & cond_not_weekly_1, 'time_coeff'] = 1.0
+    # Weekly conditions
+    cond_weekly_10 = is_weekly & ((df['work_time_daily'] * df['freq_val'] > 40) | ((df['work_time_daily'] > 8) & (df['freq_val'] >= 3)))
+    cond_weekly_01 = is_weekly & (df['work_time_daily'] * df['freq_val'] <= 4)
+
+    # Not weekly conditions
+    cond_not_weekly_1 = is_not_weekly & (df['work_time_daily'] * df['freq_val'] * 12 > 192)
+
+    conditions = [
+        cond_weekly_10,      # If this is true, use 10.0
+        cond_weekly_01,      # Else if this is true, use 0.1
+        is_weekly,           # Else if it's weekly, use 1.0 (the default for weekly)
+        cond_not_weekly_1,   # If not weekly and this is true, use 1.0
+        is_not_weekly        # Else if it's not weekly, use 0.1
+    ]
+    choices = [
+        10.0,
+        0.1,
+        1.0,
+        1.0,
+        0.1
+    ]
+
+    df['time_coeff'] = np.select(conditions, choices, default=1.0)
 
     # Create MultiIndex for mapping
     multi_index = pd.MultiIndex.from_frame(df[['amount_level', 'volatility_rank']])
@@ -181,21 +199,6 @@ def calculate_inhalation_risk_vectorized(df):
     # Clipping final values
     df['EpBandMax'] = df['EpBandMax'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
     df['EpBandMax_ST'] = df['EpBandMax_ST'].clip(lower=np.where(df['prop_type'] == 1, 0.005, 0.001), upper=5000)
-
-    # --- Debug Logging for Acetone ---
-    acetone_row = df[df['CAS_RN'] == '67-64-1']
-    if not acetone_row.empty:
-        logging.info(f"--- Inhalation Risk Calculation for 67-64-1 ---")
-        logging.info(f"  - Initial EP: {acetone_row['initial_ep'].iloc[0]}")
-        logging.info(f"  - Conc Coeff: {acetone_row['conc_coeff'].iloc[0]}")
-        logging.info(f"  - Spray Coeff: {acetone_row['spray_coeff'].iloc[0]}")
-        logging.info(f"  - Area Coeff: {acetone_row['area_coeff'].iloc[0]}")
-        logging.info(f"  - Venti Coeff: {acetone_row['venti_coeff'].iloc[0]}")
-        logging.info(f"  - Time Coeff (8h): {acetone_row['time_coeff'].iloc[0]}")
-        logging.info(f"  - Var Coeff (ST): {acetone_row['var_coeff'].iloc[0]}")
-        logging.info(f"  - Final EpBandMax (8h): {acetone_row['EpBandMax'].iloc[0]}")
-        logging.info(f"  - Final EpBandMax_ST (ST): {acetone_row['EpBandMax_ST'].iloc[0]}")
-        logging.info(f"----------------------------------------------------")
 
     return df
 
