@@ -156,6 +156,11 @@ def calculate_final_rcr_and_levels(df):
     df['OEL_Dermal'] = np.where(df['prop_type'].isin([1, 3]), oel_dermal_liq, oel_dermal_sol)
     df['RCR_Dermal'] = df['Dermal_Abs'] / df['OEL_Dermal']
     df['Risk_Level_Derm'] = df['RCR_Dermal'].apply(lambda x: calculator.get_risk_level(x, is_dermal=True))
+
+    # --- Total Risk Calculation ---
+    df['RCR_Total'] = df['RCR_Inhalation'].fillna(0) + df['RCR_Dermal'].fillna(0)
+    df['Risk_Level_Total'] = df['RCR_Total'].apply(lambda x: calculator.get_risk_level(x, is_dermal=True)) # Use dermal map as per VBA
+
     return df
 
 # --- Flask Routes ---
@@ -188,8 +193,21 @@ def upload_file_route():
             os.makedirs(app.config['DOWNLOAD_FOLDER'], exist_ok=True)
             result_df.to_csv(result_path, index=False, encoding='shift_jisx0213')
 
+            # --- Create Display DataFrame ---
+            display_columns = {
+                'CAS_RN': 'CAS RN',
+                'Product_Name': '製品名',
+                'Risk_Level_Inh': '吸入(8時間)',
+                'Risk_Level_Inh_ST': '吸入(短時間)',
+                'Risk_Level_Derm': '経皮吸収',
+                'Risk_Level_Total': '合計(吸入+経皮)',
+                'Risk_Level_Phys': '危険性(爆発,火災等)'
+            }
+            display_df = result_df[list(display_columns.keys())].copy()
+            display_df.rename(columns=display_columns, inplace=True)
+
             # Convert dataframe to HTML table for display
-            result_table = result_df.to_html(classes='table-auto w-full text-left whitespace-no-wrap', index=False)
+            result_table = display_df.to_html(classes='table-auto w-full text-left whitespace-no-wrap', index=False)
 
             return render_template('result.html', result_table=result_table, filename=result_filename)
 
