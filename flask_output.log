@@ -1,0 +1,66 @@
+Databases loaded successfully.
+ * Serving Flask app 'app'
+ * Debug mode: on
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+[33mPress CTRL+C to quit[0m
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 132-491-319
+Databases loaded successfully.
+--- 1. After Merge ---
+Index(['CAS_RN', 'Product_Name', 'amount_level', 'spray_work', 'area_high',
+       'ventilation', 'work_time_daily', 'freq_type', 'freq_val',
+       'exposure_variation',
+       ...
+       '皮膚等障害化学物質の裾切値', '第１類', '第２類', '第３類', '裾切', '第１類.1', '第２類.1', '第３類.1',
+       'Unnamed: 91', 'Unnamed: 92'],
+      dtype='object', length=114)
+    CAS_RN Product_Name       amount_level spray_work area_high            ventilation work_time_daily freq_type  freq_val exposure_variation  skin_area           glove_type        glove_edu process_temp ignition_source explosive_atm metal_contact water_contact  concentration  target_inh  target_derm  target_phys  Text 日本語名称     英語名称      GHS分類結果_ID  爆発物  可燃性ガス  エアゾール  酸化性ガス 高圧ガス  引火性液体  可燃性固体 自己反応性化学品  自然発火性液体  自然発火性固体  自己発熱性化学品  水反応可燃性化学品  酸化性液体  酸化性固体 有機過酸化物  金属腐食性化学品  鈍性化爆発物  急性毒性（経口）  急性毒性（経皮）  急性毒性（吸入：ガス）  急性毒性（吸入：蒸気）  急性毒性（吸入：粉塵、ミスト） 皮膚腐食性／刺激性 眼に対する重篤な損傷性／眼刺激性 呼吸器感作性 皮膚感作性 生殖細胞変異原性 発がん性 生殖毒性  特定標的臓器毒性（単回暴露）  特定標的臓器毒性（反復暴露）  誤えん有害性  水生環境有害性　短期（急性）  水生環境有害性　長期（慢性）  オゾン層への有害性                                          詳細情報（NITE HP　GHS分類結果）                                                  モデルラベル掲載ページURL                                         モデルＳＤＳ掲載ページURL  ppm  mg/m3  ppm.1  mg/m3.1   備考  年度  ppm.2  mg/m3.2  ppm.3  mg/m3.3 備考.1 皮膚吸収    提案年度  ppm.4  mg/m3.4  ppm.5  mg/m3.5  ppm.6  mg/m3.6 備考.2 Skin  ドキュメンテーション採用年  ppm.7  mg/m3.7   ppm.8  mg/m3.8  備考.3  ドキュメンテーション採用年.1  性状\n液体:1、固体:2、気体:3    分子量  沸点  水／オクタノール分配係数（logKow）   引火点          値    単位    値.1 単位.1  皮膚等障害化学物質  がん原性物質  濃度基準値設定物質  皮膚等障害化学物質の裾切値  第１類  第２類  第３類  裾切  第１類.1  第２類.1  第３類.1  Unnamed: 91  Unnamed: 92
+0  67-64-1         アセトン  中量 (1L以上～1000L未満)        いいえ       いいえ  換気レベルC（工業的な全体換気、屋外作業）           30分以下     週1回以上         5     ばく露濃度の変動が小さい作業  片手の手のひら付着  耐透過性・耐浸透性の手袋の着用している  基本的な教育や訓練を行っている           室温              はい            はい           いいえ           いいえ            100        True         True         True  アセトン  アセトン  Acetone  m-nite-67-64-1  NaN    NaN    NaN    NaN  NaN    2.0    NaN      NaN      NaN      NaN       NaN        NaN    NaN    NaN    NaN       NaN     NaN       NaN       NaN          NaN          NaN              NaN       NaN               2B    NaN   NaN      NaN  NaN    2             3.0             1.0     NaN             NaN             NaN        NaN  https://www.chem-info.nite.go.jp/chem/ghs/m-nite-67-64-1.html  https://anzeninfo.mhlw.go.jp/anzen/gmsds_label/lab67-64-1.html  https://anzeninfo.mhlw.go.jp/anzen/gmsds/67-64-1.html  NaN    NaN    NaN      NaN  NaN NaN  200.0    475.0    NaN      NaN  NaN  NaN  1972.0  250.0      NaN  500.0      NaN    NaN      NaN  NaN  NaN         2015.0  500.0   1200.0  1000.0   2400.0  I(2)              NaN                 1.0  58.08  56                 -0.24 -20.0  1000000.0  mg/L  239.5  hPa        NaN     NaN        NaN            NaN  NaN  NaN  NaN NaN    NaN    1.0    NaN          NaN          NaN
+--------------------
+--- 2. After Text-to-Numeric Mapping ---
+Index(['CAS_RN', 'Product_Name', 'amount_level', 'spray_work', 'area_high',
+       'ventilation', 'work_time_daily', 'freq_type', 'freq_val',
+       'exposure_variation',
+       ...
+       '皮膚等障害化学物質の裾切値', '第１類', '第２類', '第３類', '裾切', '第１類.1', '第２類.1', '第３類.1',
+       'Unnamed: 91', 'Unnamed: 92'],
+      dtype='object', length=114)
+    CAS_RN Product_Name  amount_level  spray_work  area_high  ventilation  work_time_daily  freq_type  freq_val  exposure_variation  skin_area  glove_type  glove_edu  process_temp  ignition_source  explosive_atm  metal_contact  water_contact  concentration  target_inh  target_derm  target_phys  Text 日本語名称     英語名称      GHS分類結果_ID  爆発物  可燃性ガス  エアゾール  酸化性ガス 高圧ガス  引火性液体  可燃性固体 自己反応性化学品  自然発火性液体  自然発火性固体  自己発熱性化学品  水反応可燃性化学品  酸化性液体  酸化性固体 有機過酸化物  金属腐食性化学品  鈍性化爆発物  急性毒性（経口）  急性毒性（経皮）  急性毒性（吸入：ガス）  急性毒性（吸入：蒸気）  急性毒性（吸入：粉塵、ミスト） 皮膚腐食性／刺激性 眼に対する重篤な損傷性／眼刺激性 呼吸器感作性 皮膚感作性 生殖細胞変異原性 発がん性 生殖毒性  特定標的臓器毒性（単回暴露）  特定標的臓器毒性（反復暴露）  誤えん有害性  水生環境有害性　短期（急性）  水生環境有害性　長期（慢性）  オゾン層への有害性                                          詳細情報（NITE HP　GHS分類結果）                                                  モデルラベル掲載ページURL                                         モデルＳＤＳ掲載ページURL  ppm  mg/m3  ppm.1  mg/m3.1   備考  年度  ppm.2  mg/m3.2  ppm.3  mg/m3.3 備考.1 皮膚吸収    提案年度  ppm.4  mg/m3.4  ppm.5  mg/m3.5  ppm.6  mg/m3.6 備考.2 Skin  ドキュメンテーション採用年  ppm.7  mg/m3.7   ppm.8  mg/m3.8  備考.3  ドキュメンテーション採用年.1  性状\n液体:1、固体:2、気体:3    分子量  沸点  水／オクタノール分配係数（logKow）   引火点          値    単位    値.1 単位.1  皮膚等障害化学物質  がん原性物質  濃度基準値設定物質  皮膚等障害化学物質の裾切値  第１類  第２類  第３類  裾切  第１類.1  第２類.1  第３類.1  Unnamed: 91  Unnamed: 92
+0  67-64-1         アセトン             2       False      False          1.0              0.5          1         5                   4        240         0.2        0.5            20             True           True          False          False            100        True         True         True  アセトン  アセトン  Acetone  m-nite-67-64-1  NaN    NaN    NaN    NaN  NaN    2.0    NaN      NaN      NaN      NaN       NaN        NaN    NaN    NaN    NaN       NaN     NaN       NaN       NaN          NaN          NaN              NaN       NaN               2B    NaN   NaN      NaN  NaN    2             3.0             1.0     NaN             NaN             NaN        NaN  https://www.chem-info.nite.go.jp/chem/ghs/m-nite-67-64-1.html  https://anzeninfo.mhlw.go.jp/anzen/gmsds_label/lab67-64-1.html  https://anzeninfo.mhlw.go.jp/anzen/gmsds/67-64-1.html  NaN    NaN    NaN      NaN  NaN NaN  200.0    475.0    NaN      NaN  NaN  NaN  1972.0  250.0      NaN  500.0      NaN    NaN      NaN  NaN  NaN         2015.0  500.0   1200.0  1000.0   2400.0  I(2)              NaN                 1.0  58.08  56                 -0.24 -20.0  1000000.0  mg/L  239.5  hPa        NaN     NaN        NaN            NaN  NaN  NaN  NaN NaN    NaN    1.0    NaN          NaN          NaN
+--------------------
+--- 3. After Renaming ---
+Index(['CAS_RN', 'Product_Name', 'amount_level', 'spray_work', 'area_high',
+       'ventilation', 'work_time_daily', 'freq_type', 'freq_val',
+       'exposure_variation',
+       ...
+       '皮膚等障害化学物質の裾切値', '第１類', '第２類', '第３類', '裾切', '第１類.1', '第２類.1', '第３類.1',
+       'Unnamed: 91', 'Unnamed: 92'],
+      dtype='object', length=114)/app/app/logic/calculator.py:133: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['OEL_ST'].fillna(df['OEL_8h'] * 3, inplace=True)
+/app/app/logic/calculator.py:134: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['OEL_ST'].fillna(df['ACR_Max'] * 3, inplace=True)
+/app/app/logic/calculator.py:183: FutureWarning: Setting an item of incompatible dtype is deprecated and will raise an error in a future version of pandas. Value '[]' has dtype incompatible with float64, please explicitly cast to a compatible dtype first.
+  df.loc[df['prop_type'] == 2, 'initial_ep'] = multi_index[df['prop_type'] == 2].map(sol_map)
+/app/app/logic/calculator.py:184: FutureWarning: A value is trying to be set on a copy of a DataFrame or Series through chained assignment using an inplace method.
+The behavior will change in pandas 3.0. This inplace method will never work because the intermediate object on which we are setting values always behaves as a copy.
+
+For example, when doing 'df[col].method(value, inplace=True)', try using 'df.method({col: value}, inplace=True)' or df[col] = df[col].method(value) instead, to perform the operation inplace on the original object.
+
+
+  df['initial_ep'].fillna(0, inplace=True)
+/app/app/logic/calculator.py:184: FutureWarning: Downcasting object dtype arrays on .fillna, .ffill, .bfill is deprecated and will change in a future version. Call result.infer_objects(copy=False) instead. To opt-in to the future behavior, set `pd.set_option('future.no_silent_downcasting', True)`
+  df['initial_ep'].fillna(0, inplace=True)
+127.0.0.1 - - [13/Jan/2026 04:07:20] "POST / HTTP/1.1" 200 -
+INFO:werkzeug:127.0.0.1 - - [13/Jan/2026 04:07:20] "POST / HTTP/1.1" 200 -
