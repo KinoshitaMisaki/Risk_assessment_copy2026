@@ -1,0 +1,104 @@
+# logic/constants.py
+
+# Q1: 取扱量 (Amount)
+AMOUNT_SCORE = {
+    1: 5000,  # 大量 (1kL以上)
+    2: 500,   # 中量 (1L以上～1000L未満)
+    3: 50,    # 少量 (100mL以上～1000mL未満)
+    4: 5,     # 微量 (10mL以上～100mL未満)
+    5: 0.5    # 極微量 (10mL未満)
+}
+
+# Q2: スプレー作業 (Spray) - Bool
+SPRAY_SCORE = {
+    True: 10,  # はい (飛散しやすい)
+    False: 1   # いいえ
+}
+
+# Q3: 塗布面積 (Area) - Bool (液体かつ中量以上のみ有効)
+AREA_SCORE = {
+    True: 10,  # はい (1m^2以上)
+    False: 1   # いいえ
+}
+
+# Q4: 換気状況 (Ventilation)
+VENTILATION_SCORE = {
+    4: 4,       # レベルA（特に換気のない部屋）
+    3: 3,       # レベルB（全体換気）
+    1: 1,       # レベルC（工業的な全体換気、屋外作業）
+    0.1: 0.1,   # レベルD（外付け式局所排気装置）
+    0.01: 0.01, # レベルE（囲い式局所排気装置）
+    0.001: 0.001 # レベルF（密閉容器内での取扱い）
+}
+
+# Q5: 作業時間 (Time)
+TIME_SCORE = {
+    10: 10,   # 8時間超
+    8: 8,     # 7時間超～8時間以下
+    7: 7,     # 6時間超～7時間以下
+    6: 6,     # 5時間超～6時間以下
+    5: 5,     # 4時間超～5時間以下
+    4: 4,     # 3時間超～4時間以下
+    3: 3,     # 2時間超～3時間以下
+    2: 2,     # 1時間超～2時間以下
+    1: 1,     # 30分超～1時間以下
+    0.5: 0.5  # 30分以下
+}
+
+# Q6: 頻度 (Frequency) - 係数計算に使用
+FREQUENCY_TYPE = {
+    1: '週1回以上',
+    0: '週1回未満'
+}
+
+# Q7: ばく露濃度の変動 (Variation) - 短時間ばく露計算用
+VARIATION_SCORE = {
+    4: 4, # 変動が小さい
+    6: 6  # 変動が大きい
+}
+
+# Q8: 皮膚接触面積 (SkinArea) - cm2
+SKIN_AREA_VAL = {
+    10: 10,     # 大きなコインサイズ
+    240: 240,   # 片手の手のひら
+    480: 480,   # 両手の手のひら
+    960: 960,   # 両手全体
+    1500: 1500, # 両手及び手首
+    1980: 1980  # 両手の肘から下全体
+}
+
+# Q9: 手袋着用 (Glove)
+GLOVE_SCORE = {
+    1: 1,   # 着用していない / 情報のない手袋
+    0.2: 0.2 # 耐透過性・耐浸透性の手袋を着用
+}
+
+# Q10: 教育状況 (Education)
+EDUCATION_SCORE = {
+    1: 1,     # 行っていない
+    0.5: 0.5, # 基本的な教育
+    0.25: 0.25 # 十分な教育
+}
+
+# Q11: 取扱温度 (Temp)
+TEMP_VAL = {
+    20: 20, # 室温
+    50: 50  # 室温以上
+}
+
+# Q12-Q15 (AntiFire, AntiExplosion, AntiMetal, ContactWaterAir) は True/False で保持
+
+# --- v3.2 Specification Additions ---
+
+# Mapping for the user-provided 'Product_Property' column
+PRODUCT_PROPERTY = {
+    '液体': 1,
+    '固体': 2
+}
+
+# Mapping for the substance database 'Property_Type' column (for error messages)
+SUBSTANCE_PROPERTY = {
+    1: '液体',
+    2: '固体',
+    3: '気体'
+}
